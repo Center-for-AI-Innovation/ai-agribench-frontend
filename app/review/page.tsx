@@ -78,10 +78,10 @@ function ReviewPageContent() {
     } catch (error) {
       console.error('Failed to load initial data:', error);
       console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        url: error.config?.url
+        message: error instanceof Error ? error.message : 'Unknown error',
+        response: (error as any)?.response?.data,
+        status: (error as any)?.response?.status,
+        url: (error as any)?.config?.url
       });
       toast.error('Failed to load data. Please refresh the page.');
     } finally {
@@ -111,10 +111,10 @@ function ReviewPageContent() {
         } catch (error) {
           console.error('Failed to refresh stats:', error);
           console.error('Stats error details:', {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-            url: error.config?.url
+            message: error instanceof Error ? error.message : 'Unknown error',
+            response: (error as any)?.response?.data,
+            status: (error as any)?.response?.status,
+            url: (error as any)?.config?.url
           });
         }
       }
