@@ -178,6 +178,9 @@ const QuestionList: React.FC<QuestionListProps> = ({
                           {question.review?.question_properly_phrased !== undefined && (
                             <div><strong className="text-blue-600">Question Properly Phrased:</strong> <span className="text-gray-700">{question.review.question_properly_phrased ? 'Yes' : 'No'}</span></div>
                           )}
+                          {question.review?.answer_rating && (
+                            <div><strong className="text-blue-600">Answer Rating:</strong> <span className="text-gray-700">{question.review.answer_rating}</span></div>
+                          )}
                           {question.review?.answer_issues && question.review.answer_issues.length > 0 && (
                             <div><strong className="text-blue-600">Issues:</strong> <span className="text-gray-700">{question.review.answer_issues.join(', ')}</span></div>
                           )}

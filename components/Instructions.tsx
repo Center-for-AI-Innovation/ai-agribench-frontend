@@ -16,7 +16,7 @@ const Instructions: React.FC<InstructionsProps> = ({ onStart }) => {
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8 text-white">
             <h1 className="text-3xl font-bold mb-2">Thank you for volunteering!</h1>
             <p className="text-blue-100 text-lg">
-              Welcome to the AI Agribench Review System. We appreciate your expertise in evaluating agricultural Q&A pairs.
+              Welcome to the AI Agribench Review System. We appreciate your time and expertise in evaluating agricultural Q&A pairs.
             </p>
           </div>
 
@@ -95,7 +95,7 @@ const Instructions: React.FC<InstructionsProps> = ({ onStart }) => {
               <ul className="space-y-2 text-yellow-700">
                 <li className="flex items-start">
                   <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                  <span>After completing each review, remember to <strong>save your answers</strong> before moving to the next question.</span>
+                  <span>Click <strong>Save and Next Question</strong> to move to the next Question.</span>
                 </li>
                 <li className="flex items-start">
                   <Clock className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
