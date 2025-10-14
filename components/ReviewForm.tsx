@@ -7,7 +7,6 @@ import { Assignment, ReviewSubmission } from '@/lib/api';
 interface ReviewFormProps {
   question: Assignment;
   onSave: (reviewData: ReviewSubmission) => Promise<void>;
-  onNext: () => void;
   questionNumber: number;
   totalQuestions: number;
   isSubmitting: boolean;
@@ -16,7 +15,6 @@ interface ReviewFormProps {
 const ReviewForm: React.FC<ReviewFormProps> = ({
   question,
   onSave,
-  onNext,
   questionNumber,
   totalQuestions,
   isSubmitting,
@@ -331,7 +329,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
             onClick={async () => {
               if (isFormValid()) {
                 await handleSave();
-                onNext();
+                // Navigation is now handled in the parent component after save
               }
             }}
             disabled={!isFormValid() || isSubmitting}

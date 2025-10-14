@@ -98,9 +98,11 @@ function ReviewPageContent() {
       // Move question from pending to reviewed in local state
       moveQuestionToReviewed(reviewData.assignment_id, reviewData);
       
-      // Update current question index
-      if (currentQuestionIndex >= pendingQuestions.length - 1) {
-        setCurrentQuestionIndex(Math.max(0, pendingQuestions.length - 2));
+      // Move to next question after successful save
+      if (pendingQuestions.length > 1) {
+        setCurrentQuestionIndex((prev) => 
+          prev < pendingQuestions.length - 1 ? prev + 1 : 0
+        );
       }
       
       // Refresh stats
@@ -277,14 +279,15 @@ function ReviewPageContent() {
                   </div>
                 </div>
 
-                <ReviewForm
-                  question={pendingQuestions[currentQuestionIndex]}
-                  onSave={handleSaveReview}
-                  onNext={handleNextQuestion}
-                  questionNumber={currentQuestionIndex + 1}
-                  totalQuestions={pendingQuestions.length}
-                  isSubmitting={isSubmitting}
-                />
+                {pendingQuestions[currentQuestionIndex] && (
+                  <ReviewForm
+                    question={pendingQuestions[currentQuestionIndex]}
+                    onSave={handleSaveReview}
+                    questionNumber={currentQuestionIndex + 1}
+                    totalQuestions={pendingQuestions.length}
+                    isSubmitting={isSubmitting}
+                  />
+                )}
               </div>
             ) : (
               <div className="text-center py-12">
