@@ -99,11 +99,25 @@ function ReviewPageContent() {
       moveQuestionToReviewed(reviewData.assignment_id, reviewData);
       
       // Move to next question after successful save
-      if (pendingQuestions.length > 1) {
-        setCurrentQuestionIndex((prev) => 
-          prev < pendingQuestions.length - 1 ? prev + 1 : 0
-        );
-      }
+      // Note: The question is already moved from pending to reviewed by moveQuestionToReviewed
+      // So we need to adjust the index for the remaining questions
+      setCurrentQuestionIndex((prev) => {
+        console.log('Navigation debug:', {
+          currentIndex: prev,
+          pendingLength: pendingQuestions.length,
+          lastIndex: pendingQuestions.length - 1
+        });
+        
+        // If we were at the last question, move to the previous one
+        if (prev >= pendingQuestions.length - 1) {
+          const newIndex = Math.max(0, prev - 1);
+          console.log('Moving to previous question:', newIndex);
+          return newIndex;
+        }
+        // Otherwise stay at the same index (which now points to the next question)
+        console.log('Staying at same index:', prev);
+        return prev;
+      });
       
       // Refresh stats
       if (user && userType === 'reviewer') {
@@ -279,15 +293,24 @@ function ReviewPageContent() {
                   </div>
                 </div>
 
-                {pendingQuestions[currentQuestionIndex] && (
-                  <ReviewForm
-                    question={pendingQuestions[currentQuestionIndex]}
-                    onSave={handleSaveReview}
-                    questionNumber={currentQuestionIndex + 1}
-                    totalQuestions={pendingQuestions.length}
-                    isSubmitting={isSubmitting}
-                  />
-                )}
+                {(() => {
+                  console.log('Render debug:', {
+                    currentIndex: currentQuestionIndex,
+                    pendingLength: pendingQuestions.length,
+                    currentQuestion: pendingQuestions[currentQuestionIndex],
+                    allPendingQuestions: pendingQuestions.map((q, i) => ({ index: i, id: q.assignment_id }))
+                  });
+                  
+                  return pendingQuestions[currentQuestionIndex] && (
+                    <ReviewForm
+                      question={pendingQuestions[currentQuestionIndex]}
+                      onSave={handleSaveReview}
+                      questionNumber={currentQuestionIndex + 1}
+                      totalQuestions={pendingQuestions.length}
+                      isSubmitting={isSubmitting}
+                    />
+                  );
+                })()}
               </div>
             ) : (
               <div className="text-center py-12">
