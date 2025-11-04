@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Users, CheckCircle, AlertTriangle, TrendingUp, FileText, Download, Database } from 'lucide-react';
+import { BarChart3, Users, CheckCircle, AlertTriangle, TrendingUp, FileText, Download, Database, ChevronDown, ChevronRight } from 'lucide-react';
 import { 
   getAdminOverview, 
   getAllReviewersStats, 
@@ -743,8 +743,7 @@ const QualityTab: React.FC<{ qualityInsights: QualityInsights | null }> = ({ qua
 
 // Responses Tab Component
 const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResponses }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
 
   if (!allResponses) return (
     <div className="flex items-center justify-center py-12">
@@ -755,11 +754,87 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
     </div>
   );
 
-  // Pagination
-  const totalPages = Math.ceil(allResponses.responses.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedResponses = allResponses.responses.slice(startIndex, endIndex);
+  // Group responses by qna_id
+  const groupedByQna = allResponses.responses.reduce((acc, response) => {
+    if (!acc[response.qna_id]) {
+      acc[response.qna_id] = {
+        qna_id: response.qna_id,
+        question: response.question,
+        answer: response.answer,
+        categories: response.categories,
+        document_id: response.document_id,
+        reason: response.reason,
+        reviews: []
+      };
+    }
+    acc[response.qna_id].reviews.push({
+      reviewer_name: response.reviewer_name,
+      reviewer_email: response.reviewer_email,
+      has_expertise: response.has_expertise,
+      question_reasonable: response.question_reasonable,
+      question_properly_phrased: response.question_properly_phrased,
+      answer_rating: response.answer_rating,
+      answer_issues: response.answer_issues,
+      other_weakness_explanation: response.other_weakness_explanation,
+      review_created_at: response.review_created_at,
+      review_updated_at: response.review_updated_at
+    });
+    return acc;
+  }, {} as Record<string, {
+    qna_id: string;
+    question: string;
+    answer: string;
+    categories: string[];
+    document_id?: string;
+    reason?: string;
+    reviews: Array<{
+      reviewer_name: string;
+      reviewer_email: string;
+      has_expertise: boolean;
+      question_reasonable?: boolean;
+      question_properly_phrased?: boolean;
+      answer_rating?: string;
+      answer_issues?: string[];
+      other_weakness_explanation?: string;
+      review_created_at: string;
+      review_updated_at: string;
+    }>;
+  }>);
+
+  // Convert to array and calculate statistics
+  const questionGroups = Object.values(groupedByQna);
+  
+  // Calculate statistics
+  const stats = {
+    with3Reviewers: questionGroups.filter(q => q.reviews.length === 3).length,
+    with2Reviewers: questionGroups.filter(q => q.reviews.length === 2).length,
+    with1Reviewer: questionGroups.filter(q => q.reviews.length === 1).length
+  };
+
+  // Sort: first by reviewer count (3, 2, 1), then by qna_id
+  const sortedQuestions = [...questionGroups].sort((a, b) => {
+    // First sort by reviewer count (descending: 3, 2, 1)
+    if (b.reviews.length !== a.reviews.length) {
+      return b.reviews.length - a.reviews.length;
+    }
+    // Then sort by qna_id (alphabetically/numerically)
+    return a.qna_id.localeCompare(b.qna_id, undefined, { numeric: true, sensitivity: 'base' });
+  });
+
+  const toggleExpanded = (qnaId: string) => {
+    const newExpanded = new Set(expandedQuestions);
+    if (newExpanded.has(qnaId)) {
+      newExpanded.delete(qnaId);
+    } else {
+      newExpanded.add(qnaId);
+    }
+    setExpandedQuestions(newExpanded);
+  };
+
+  const truncateText = (text: string, maxLength: number = 150) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  };
 
   const downloadJSON = () => {
     const dataStr = JSON.stringify(allResponses.responses, null, 2);
@@ -817,58 +892,48 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
     toast.success('CSV file downloaded successfully!');
   };
 
-  const downloadExcel = () => {
-    // For Excel, we'll create a CSV with proper encoding that Excel can read
-    const headers = [
-      'QNA ID', 'Question', 'Answer', 'Categories', 'Document ID', 'Reason',
-      'Reviewer Name', 'Reviewer Email', 'Has Expertise', 'Question Reasonable',
-      'Question Properly Phrased', 'Answer Rating', 'Answer Issues', 'Other Weakness Explanation',
-      'Review Created At', 'Review Updated At'
-    ];
-
-    const csvContent = [
-      headers.join('\t'),
-      ...allResponses.responses.map(response => [
-        response.qna_id,
-        response.question.replace(/\t/g, ' '),
-        response.answer.replace(/\t/g, ' '),
-        response.categories.join('; '),
-        response.document_id || '',
-        response.reason || '',
-        response.reviewer_name,
-        response.reviewer_email,
-        response.has_expertise ? 'Yes' : 'No',
-        response.question_reasonable ? 'Yes' : 'No',
-        response.question_properly_phrased ? 'Yes' : 'No',
-        response.answer_rating || '',
-        response.answer_issues ? response.answer_issues.join('; ') : '',
-        response.other_weakness_explanation || '',
-        response.review_created_at,
-        response.review_updated_at
-      ].join('\t'))
-    ].join('\n');
-
-    const dataBlob = new Blob([csvContent], { type: 'text/tab-separated-values;charset=utf-8;' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `expert-responses-${new Date().toISOString().split('T')[0]}.xls`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    toast.success('Excel file downloaded successfully!');
-  };
-
   return (
     <div className="space-y-6">
+      {/* Statistics Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center">
+            <Users className="h-8 w-8 text-blue-600" />
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Questions with 3 Reviewers</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.with3Reviewers}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center">
+            <Users className="h-8 w-8 text-green-600" />
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Questions with 2 Reviewers</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.with2Reviewers}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center">
+            <Users className="h-8 w-8 text-orange-600" />
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Questions with 1 Reviewer</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.with1Reviewer}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Header with download buttons */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex justify-between items-center mb-4">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">All Expert Responses</h3>
             <p className="text-sm text-gray-600">
-              Total responses: {allResponses.total_responses}
+              Total questions: {sortedQuestions.length} | Total responses: {allResponses.total_responses}
             </p>
           </div>
           <div className="flex space-x-3">
@@ -886,146 +951,172 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
               <Download className="h-4 w-4" />
               <span>Download CSV</span>
             </button>
-            <button
-              onClick={downloadExcel}
-              className="flex items-center space-x-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-            >
-              <Download className="h-4 w-4" />
-              <span>Download Excel</span>
-            </button>
           </div>
         </div>
       </div>
 
-      {/* Responses Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  QNA ID
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Question Preview
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Reviewer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Expertise
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Rating
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Updated
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedResponses.map((response, index) => (
-                <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {response.qna_id}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    <div className="max-w-xs truncate" title={response.question}>
-                      {response.question}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{response.reviewer_name}</div>
-                      <div className="text-sm text-gray-500">{response.reviewer_email}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      response.has_expertise 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {response.has_expertise ? 'Yes' : 'No'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {response.answer_rating ? (
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        response.answer_rating === 'GOOD' ? 'bg-green-100 text-green-800' :
-                        response.answer_rating === 'CLOSE-BUT-FIXABLE' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {response.answer_rating}
-                      </span>
-                    ) : (
-                      <span className="text-sm text-gray-500">-</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(response.review_updated_at).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {/* Collapsible Questions List */}
+      <div className="space-y-4">
+        {sortedQuestions.map((questionGroup) => {
+          const isExpanded = expandedQuestions.has(questionGroup.qna_id);
+          const reviewerCount = questionGroup.reviews.length;
+          const reviewerCountColor = 
+            reviewerCount === 3 ? 'bg-blue-100 text-blue-800' :
+            reviewerCount === 2 ? 'bg-green-100 text-green-800' :
+            'bg-orange-100 text-orange-800';
 
-        {/* Pagination Controls */}
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-700">
-              Showing {startIndex + 1} to {Math.min(endIndex, allResponses.responses.length)} of {allResponses.responses.length} responses
-            </span>
-            <select
-              value={itemsPerPage}
-              onChange={(e) => {
-                setItemsPerPage(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-              className="border border-gray-300 rounded-md px-3 py-1 text-sm"
+          return (
+            <div
+              key={questionGroup.qna_id}
+              className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
             >
-              <option value={10}>10 per page</option>
-              <option value={20}>20 per page</option>
-              <option value={50}>50 per page</option>
-              <option value={100}>100 per page</option>
-            </select>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setCurrentPage(1)}
-              disabled={currentPage === 1}
-              className="px-3 py-1 rounded-md border border-gray-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              First
-            </button>
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1 rounded-md border border-gray-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              Previous
-            </button>
-            <span className="px-3 py-1 text-sm text-gray-700">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 rounded-md border border-gray-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              Next
-            </button>
-            <button
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 rounded-md border border-gray-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              Last
-            </button>
-          </div>
-        </div>
+              {/* Question Header */}
+              <div 
+                className="p-4 cursor-pointer hover:bg-gray-50"
+                onClick={() => toggleExpanded(questionGroup.qna_id)}
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-center space-x-2 flex-1 min-w-0">
+                    <button className="text-gray-400 hover:text-gray-600 flex-shrink-0">
+                      {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                    </button>
+                    <h3 className="font-medium text-gray-900 text-base">
+                      QA ID: {questionGroup.qna_id}
+                    </h3>
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${reviewerCountColor}`}>
+                      {reviewerCount} {reviewerCount === 1 ? 'Reviewer' : 'Reviewers'}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1 ml-2">
+                    {questionGroup.categories.slice(0, 3).map((category, index) => (
+                      <span
+                        key={index}
+                        className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
+                      >
+                        {category.replace(/_/g, ' ')}
+                      </span>
+                    ))}
+                    {questionGroup.categories.length > 3 && (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                        +{questionGroup.categories.length - 3}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                {!isExpanded && (
+                  <div>
+                    <p className="text-gray-700 text-sm">
+                      {truncateText(questionGroup.question)}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Expanded Content */}
+              {isExpanded && (
+                <div className="border-t border-gray-200 bg-gray-50 p-4">
+                  <div className="space-y-4">
+                    {/* Question and Answer */}
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-2">Question:</h4>
+                      <p className="text-gray-700 bg-white p-3 rounded border text-sm">
+                        {questionGroup.question}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-2">Answer:</h4>
+                      <p className="text-gray-700 bg-white p-3 rounded border text-sm">
+                        {questionGroup.answer}
+                      </p>
+                    </div>
+
+                    {/* Reviews */}
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-3">Reviews ({reviewerCount}):</h4>
+                      <div className="space-y-3">
+                        {questionGroup.reviews.map((review, index) => (
+                          <div key={index} className="bg-white p-4 rounded border space-y-3">
+                            <div className="flex justify-between items-start border-b pb-2">
+                              <div>
+                                <div className="font-medium text-gray-900">{review.reviewer_name}</div>
+                                <div className="text-sm text-gray-500">{review.reviewer_email}</div>
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                Updated: {new Date(review.review_updated_at).toLocaleDateString()}
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                              <div>
+                                <span className="font-medium text-gray-700">Expertise: </span>
+                                <span className={review.has_expertise ? 'text-green-600' : 'text-red-600'}>
+                                  {review.has_expertise ? 'Yes' : 'No'}
+                                </span>
+                              </div>
+
+                              {review.question_reasonable !== undefined && (
+                                <div>
+                                  <span className="font-medium text-gray-700">Question Reasonable: </span>
+                                  <span className={review.question_reasonable ? 'text-green-600' : 'text-red-600'}>
+                                    {review.question_reasonable ? 'Yes' : 'No'}
+                                  </span>
+                                </div>
+                              )}
+
+                              {review.question_properly_phrased !== undefined && (
+                                <div>
+                                  <span className="font-medium text-gray-700">Properly Phrased: </span>
+                                  <span className={review.question_properly_phrased ? 'text-green-600' : 'text-red-600'}>
+                                    {review.question_properly_phrased ? 'Yes' : 'No'}
+                                  </span>
+                                </div>
+                              )}
+
+                              {review.answer_rating && (
+                                <div>
+                                  <span className="font-medium text-gray-700">Answer Rating: </span>
+                                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                    review.answer_rating === 'GOOD' ? 'bg-green-100 text-green-800' :
+                                    review.answer_rating === 'CLOSE-BUT-FIXABLE' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-red-100 text-red-800'
+                                  }`}>
+                                    {review.answer_rating}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+
+                            {review.answer_issues && review.answer_issues.length > 0 && (
+                              <div>
+                                <span className="font-medium text-gray-700 text-sm">Issues: </span>
+                                <div className="mt-1 flex flex-wrap gap-1">
+                                  {review.answer_issues.map((issue, idx) => (
+                                    <span key={idx} className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded">
+                                      {issue}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {review.other_weakness_explanation && (
+                              <div>
+                                <span className="font-medium text-gray-700 text-sm">Other Weaknesses: </span>
+                                <p className="text-gray-600 text-sm mt-1">{review.other_weakness_explanation}</p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
