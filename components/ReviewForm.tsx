@@ -121,19 +121,19 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     (formData.answer_rating === 'CLOSE-BUT-FIXABLE' || formData.answer_rating === 'NOT GOOD');
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-4 sm:p-6">
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         {/* Header */}
-        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-900">
+        <div className="bg-gray-50 px-4 sm:px-6 py-4 border-b border-gray-200">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
               QA ID: {question.qna.qna_id}
             </h2>
             <div className="flex flex-wrap gap-2">
               {question.qna.categories.map((category, index) => (
                 <span
                   key={index}
-                  className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
+                  className="px-2 sm:px-3 py-1 bg-blue-100 text-blue-800 text-xs sm:text-sm rounded-full"
                 >
                   {category.replace(/_/g, ' ')}
                 </span>
@@ -143,49 +143,49 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
         </div>
 
         {/* Question and Answer */}
-        <div className="px-6 py-6 space-y-6">
+        <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
           <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Question:</h3>
-            <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2 sm:mb-3">Question:</h3>
+            <p className="text-gray-700 bg-gray-50 p-3 sm:p-4 rounded-lg text-sm sm:text-base break-words">
               {question.qna.question}
             </p>
           </div>
 
           <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Answer:</h3>
-            <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2 sm:mb-3">Answer:</h3>
+            <p className="text-gray-700 bg-gray-50 p-3 sm:p-4 rounded-lg text-sm sm:text-base break-words">
               {question.qna.answer}
             </p>
           </div>
         </div>
 
         {/* Review Questions */}
-        <div className="px-6 pb-6 space-y-8">
+        <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-6 sm:space-y-8">
           {/* Question 1: Expertise */}
           <div className="space-y-3">
-            <h4 className="text-lg font-medium text-gray-900">
+            <h4 className="text-base sm:text-lg font-medium text-gray-900">
               1. Do you have the expertise to evaluate this QA pair?
             </h4>
             <div className="space-y-2">
-              <label className="flex items-center space-x-3 cursor-pointer">
+              <label className="flex items-center space-x-3 cursor-pointer min-h-[44px] py-2">
                 <input
                   type="radio"
                   name="has_expertise"
                   checked={formData.has_expertise === true}
                   onChange={() => handleExpertiseChange(true)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                  className="h-5 w-5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 flex-shrink-0"
                 />
-                <span className="text-gray-700">YES</span>
+                <span className="text-gray-700 text-sm sm:text-base">YES</span>
               </label>
-              <label className="flex items-center space-x-3 cursor-pointer">
+              <label className="flex items-center space-x-3 cursor-pointer min-h-[44px] py-2">
                 <input
                   type="radio"
                   name="has_expertise"
                   checked={formData.has_expertise === false}
                   onChange={() => handleExpertiseChange(false)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                  className="h-5 w-5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 flex-shrink-0"
                 />
-                <span className="text-gray-700">NO (Skip questions #2 – #5 for this QA pair)</span>
+                <span className="text-gray-700 text-sm sm:text-base">NO (Skip questions #2 – #5 for this QA pair)</span>
               </label>
             </div>
           </div>
@@ -195,29 +195,29 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
             <>
               {/* Question 2: Reasonable */}
               <div className="space-y-3">
-                <h4 className="text-lg font-medium text-gray-900">
+                <h4 className="text-base sm:text-lg font-medium text-gray-900">
                   2. Is the question in the QA pair reasonable to ask from an Ag advisory service?
                 </h4>
                 <div className="space-y-2">
-                  <label className="flex items-center space-x-3 cursor-pointer">
+                  <label className="flex items-center space-x-3 cursor-pointer min-h-[44px] py-2">
                     <input
                       type="radio"
                       name="question_reasonable"
                       checked={formData.question_reasonable === true}
                       onChange={() => handleReasonableChange(true)}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                      className="h-5 w-5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 flex-shrink-0"
                     />
-                    <span className="text-gray-700">YES</span>
+                    <span className="text-gray-700 text-sm sm:text-base">YES</span>
                   </label>
-                  <label className="flex items-center space-x-3 cursor-pointer">
+                  <label className="flex items-center space-x-3 cursor-pointer min-h-[44px] py-2">
                     <input
                       type="radio"
                       name="question_reasonable"
                       checked={formData.question_reasonable === false}
                       onChange={() => handleReasonableChange(false)}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                      className="h-5 w-5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 flex-shrink-0"
                     />
-                    <span className="text-gray-700">NO (Skip questions #3 – #5 for this QA pair)</span>
+                    <span className="text-gray-700 text-sm sm:text-base">NO (Skip questions #3 – #5 for this QA pair)</span>
                   </label>
                 </div>
               </div>
@@ -226,50 +226,50 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                 <>
                   {/* Question 3: Properly Phrased */}
                   <div className="space-y-3">
-                    <h4 className="text-lg font-medium text-gray-900">
+                    <h4 className="text-base sm:text-lg font-medium text-gray-900">
                       3. Is the question in the QA pair properly phrased like an "average user" would ask?
                     </h4>
                     <div className="space-y-2">
-                      <label className="flex items-center space-x-3 cursor-pointer">
+                      <label className="flex items-center space-x-3 cursor-pointer min-h-[44px] py-2">
                         <input
                           type="radio"
                           name="question_properly_phrased"
                           checked={formData.question_properly_phrased === true}
                           onChange={() => setFormData(prev => ({ ...prev, question_properly_phrased: true }))}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                          className="h-5 w-5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 flex-shrink-0"
                         />
-                        <span className="text-gray-700">YES</span>
+                        <span className="text-gray-700 text-sm sm:text-base">YES</span>
                       </label>
-                      <label className="flex items-center space-x-3 cursor-pointer">
+                      <label className="flex items-center space-x-3 cursor-pointer min-h-[44px] py-2">
                         <input
                           type="radio"
                           name="question_properly_phrased"
                           checked={formData.question_properly_phrased === false}
                           onChange={() => setFormData(prev => ({ ...prev, question_properly_phrased: false }))}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                          className="h-5 w-5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 flex-shrink-0"
                         />
-                        <span className="text-gray-700">NO</span>
+                        <span className="text-gray-700 text-sm sm:text-base">NO</span>
                       </label>
                     </div>
                   </div>
 
                   {/* Question 4: Answer Rating */}
                   <div className="space-y-3">
-                    <h4 className="text-lg font-medium text-gray-900">
+                    <h4 className="text-base sm:text-lg font-medium text-gray-900">
                       4. How would you rate the Answer?
                     </h4>
                     <div className="space-y-2">
                       {['GOOD', 'CLOSE-BUT-FIXABLE', 'NOT GOOD'].map((rating) => (
-                        <label key={rating} className="flex items-center space-x-3 cursor-pointer">
+                        <label key={rating} className="flex items-center space-x-3 cursor-pointer min-h-[44px] py-2">
                           <input
                             type="radio"
                             name="answer_rating"
                             value={rating}
                             checked={formData.answer_rating === rating}
                             onChange={(e) => setFormData(prev => ({ ...prev, answer_rating: e.target.value }))}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                            className="h-5 w-5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 flex-shrink-0"
                           />
-                          <span className="text-gray-700">{rating}</span>
+                          <span className="text-gray-700 text-sm sm:text-base">{rating}</span>
                         </label>
                       ))}
                     </div>
@@ -278,7 +278,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                   {/* Question 5: Answer Issues */}
                   {showIssuesSection && (
                     <div className="space-y-3">
-                      <h4 className="text-lg font-medium text-gray-900">
+                      <h4 className="text-base sm:text-lg font-medium text-gray-900">
                         5. If the answer is CLOSE-BUT-FIXABLE or NOT-GOOD, why is that?
                       </h4>
                       <div className="space-y-2">
@@ -289,14 +289,14 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                           'UNCLEAR OR CONFUSING',
                           'OTHER WEAKNESSES',
                         ].map((issue) => (
-                          <label key={issue} className="flex items-center space-x-3 cursor-pointer">
+                          <label key={issue} className="flex items-center space-x-3 cursor-pointer min-h-[44px] py-2">
                             <input
                               type="checkbox"
                               checked={formData.answer_issues.includes(issue)}
                               onChange={(e) => handleIssueChange(issue, e.target.checked)}
-                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 rounded"
+                              className="h-5 w-5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 rounded flex-shrink-0"
                             />
-                            <span className="text-gray-700">{issue}</span>
+                            <span className="text-gray-700 text-sm sm:text-base">{issue}</span>
                           </label>
                         ))}
                       </div>
@@ -311,7 +311,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                             onChange={(e) => setFormData(prev => ({ ...prev, other_weakness_explanation: e.target.value }))}
                             placeholder="Briefly explain the other weaknesses..."
                             rows={4}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                           />
                         </div>
                       )}
@@ -324,7 +324,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-center">
+        <div className="bg-gray-50 px-4 sm:px-6 py-4 border-t border-gray-200 flex justify-center">
           <button
             onClick={async () => {
               if (isFormValid()) {
@@ -333,7 +333,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
               }
             }}
             disabled={!isFormValid() || isSubmitting}
-            className="flex items-center space-x-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors font-medium"
+            className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 min-h-[44px] bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors font-medium text-sm sm:text-base"
           >
             <Save className="h-4 w-4" />
             <span>{isSubmitting ? 'Saving...' : 'Save & Next Question'}</span>

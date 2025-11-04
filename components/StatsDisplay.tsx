@@ -46,23 +46,23 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ stats, isLoading }) => {
     : 0;
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">Review Statistics</h2>
+    <div className="space-y-4 sm:space-y-6">
+      <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Review Statistics</h2>
       
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
         {/* Overall Progress */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Overall Progress</h3>
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Overall Progress</h3>
           <div className="text-center">
-            <div className="text-4xl font-bold text-blue-600 mb-2">
+            <div className="text-3xl sm:text-4xl font-bold text-blue-600 mb-2">
               {overallPercentage}%
             </div>
-            <p className="text-gray-600">
+            <p className="text-sm sm:text-base text-gray-600">
               {stats.total_reviewed} of {stats.total_assigned} questions reviewed
             </p>
-            <div className="mt-4 bg-gray-200 rounded-full h-3">
+            <div className="mt-3 sm:mt-4 bg-gray-200 rounded-full h-2.5 sm:h-3">
               <div 
-                className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+                className="bg-blue-600 h-2.5 sm:h-3 rounded-full transition-all duration-300"
                 style={{ width: `${overallPercentage}%` }}
               ></div>
             </div>
@@ -70,9 +70,9 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ stats, isLoading }) => {
         </div>
 
                {/* Categories Progress */}
-               <div className="bg-white rounded-lg shadow p-6">
-                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Categories Progress</h3>
-                 <div className="space-y-4">
+               <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Categories Progress</h3>
+                 <div className="space-y-3 sm:space-y-4">
                    {stats.categories && Object.keys(stats.categories).length > 0 ? (
                      Object.entries(stats.categories).map(([category, data]) => {
                        // Handle different data structures
@@ -86,16 +86,16 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ stats, isLoading }) => {
                        return (
                          <div key={category}>
                            <div className="flex justify-between items-center mb-1">
-                             <span className="text-sm font-medium text-gray-700">
+                             <span className="text-xs sm:text-sm font-medium text-gray-700 truncate flex-1 mr-2">
                                {category.replace(/_/g, ' ')}
                              </span>
-                             <span className="text-sm text-gray-600">
+                             <span className="text-xs sm:text-sm text-gray-600 flex-shrink-0">
                                {reviewed} / {total}
                              </span>
                            </div>
-                           <div className="bg-gray-200 rounded-full h-2">
+                           <div className="bg-gray-200 rounded-full h-2 sm:h-2.5">
                              <div
-                               className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                               className="bg-green-500 h-2 sm:h-2.5 rounded-full transition-all duration-300"
                                style={{ width: `${categoryPercentage}%` }}
                              ></div>
                            </div>
@@ -126,26 +126,26 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ stats, isLoading }) => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg shadow p-4 text-center">
-          <div className="text-2xl font-bold text-green-600">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="bg-white rounded-lg shadow p-3 sm:p-4 text-center">
+          <div className="text-xl sm:text-2xl font-bold text-green-600">
             {stats.total_reviewed}
           </div>
-          <div className="text-sm text-gray-600">Completed</div>
+          <div className="text-xs sm:text-sm text-gray-600">Completed</div>
         </div>
         
-        <div className="bg-white rounded-lg shadow p-4 text-center">
-          <div className="text-2xl font-bold text-orange-600">
+        <div className="bg-white rounded-lg shadow p-3 sm:p-4 text-center">
+          <div className="text-xl sm:text-2xl font-bold text-orange-600">
             {stats.remaining}
           </div>
-          <div className="text-sm text-gray-600">Remaining</div>
+          <div className="text-xs sm:text-sm text-gray-600">Remaining</div>
         </div>
         
-        <div className="bg-white rounded-lg shadow p-4 text-center">
-          <div className="text-2xl font-bold text-blue-600">
+        <div className="bg-white rounded-lg shadow p-3 sm:p-4 text-center">
+          <div className="text-xl sm:text-2xl font-bold text-blue-600">
             {stats.total_assigned}
           </div>
-          <div className="text-sm text-gray-600">Total Assigned</div>
+          <div className="text-xs sm:text-sm text-gray-600">Total Assigned</div>
         </div>
       </div>
     </div>

@@ -58,3 +58,12 @@ div.gridjs-wrapper {
 div.dt-container div.dt-layout-row{
 	margin: 0 0!important
 }
+
+.scrollbar-hide {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+	display: none;
+}

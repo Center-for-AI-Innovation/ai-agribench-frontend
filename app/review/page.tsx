@@ -274,18 +274,18 @@ function ReviewPageContent() {
             {pendingQuestions.length > 0 ? (
               <div className="space-y-6">
                 {/* Progress indicator */}
-                <div className="bg-white rounded-lg shadow p-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-700">
+                <div className="bg-white rounded-lg shadow p-3 sm:p-4">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-2">
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">
                       Progress: {reviewedQuestions.length} of {pendingQuestions.length + reviewedQuestions.length} questions reviewed
                     </span>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-xs sm:text-sm text-gray-500">
                       {Math.round((reviewedQuestions.length / (pendingQuestions.length + reviewedQuestions.length)) * 100)}%
                     </span>
                   </div>
-                  <div className="bg-gray-200 rounded-full h-2">
+                  <div className="bg-gray-200 rounded-full h-2 sm:h-2.5">
                     <div 
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      className="bg-blue-600 h-2 sm:h-2.5 rounded-full transition-all duration-300"
                       style={{ 
                         width: `${(reviewedQuestions.length / (pendingQuestions.length + reviewedQuestions.length)) * 100}%` 
                       }}
@@ -354,20 +354,20 @@ function ReviewPageContent() {
       
       {/* Floating Instructions */}
       {showInstructions && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-            <div className="flex justify-between items-center p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">Instructions</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-2 sm:p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-200 flex-shrink-0">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Instructions</h2>
               <button
                 onClick={handleHideInstructions}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 hover:text-gray-600 transition-colors p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
               >
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
+            <div className="overflow-y-auto max-h-[calc(95vh-80px)] sm:max-h-[calc(90vh-80px)] flex-1">
               <Instructions onStart={handleHideInstructions} />
             </div>
           </div>
