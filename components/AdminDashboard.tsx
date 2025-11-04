@@ -744,6 +744,12 @@ const QualityTab: React.FC<{ qualityInsights: QualityInsights | null }> = ({ qua
 // Responses Tab Component
 const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResponses }) => {
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
+  const [qualityFilter, setQualityFilter] = useState<string>('all');
+
+  // Helper function to normalize ratings (undefined/null → "NOT GOOD")
+  const normalizeRating = (rating: string | undefined | null): string => {
+    return rating || 'NOT GOOD';
+  };
 
   if (!allResponses) return (
     <div className="flex items-center justify-center py-12">
@@ -811,6 +817,69 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
     with1Reviewer: questionGroups.filter(q => q.reviews.length === 1).length
   };
 
+  // Helper function to check if a question matches filter criteria
+  const questionMatchesFilter = (questionGroup: typeof questionGroups[0], filter: string): boolean => {
+    // Get all normalized ratings for this question's reviews
+    const ratings = questionGroup.reviews.map(review => normalizeRating(review.answer_rating));
+    
+    switch (filter) {
+      case 'only-good':
+        // ALL reviews must be "GOOD"
+        return ratings.length > 0 && ratings.every(r => r === 'GOOD');
+      
+      case 'good-and-cfb':
+        // ALL reviews must be either "GOOD" or "CLOSE-BUT-FIXABLE"
+        // AND must have at least one of each
+        return ratings.length > 0 &&
+               ratings.every(r => r === 'GOOD' || r === 'CLOSE-BUT-FIXABLE') &&
+               ratings.includes('GOOD') &&
+               ratings.includes('CLOSE-BUT-FIXABLE');
+      
+      case 'all':
+        return true;
+      
+      case 'cfb-and-not-good':
+        // ALL reviews must be either "CLOSE-BUT-FIXABLE" or "NOT GOOD"
+        // AND must have at least one of each
+        return ratings.length > 0 &&
+               ratings.every(r => r === 'CLOSE-BUT-FIXABLE' || r === 'NOT GOOD') &&
+               ratings.includes('CLOSE-BUT-FIXABLE') &&
+               ratings.includes('NOT GOOD');
+      
+      case 'only-not-good':
+        // ALL reviews must be "NOT GOOD"
+        return ratings.length > 0 && ratings.every(r => r === 'NOT GOOD');
+      
+      case 'good-and-not-good':
+        // ALL reviews must be either "GOOD" or "NOT GOOD"
+        // AND must have at least one of each
+        return ratings.length > 0 &&
+               ratings.every(r => r === 'GOOD' || r === 'NOT GOOD') &&
+               ratings.includes('GOOD') &&
+               ratings.includes('NOT GOOD');
+      
+      case 'good-cfb-not-good':
+        // Must have at least one of each rating type
+        return ratings.includes('GOOD') &&
+               ratings.includes('CLOSE-BUT-FIXABLE') &&
+               ratings.includes('NOT GOOD');
+      
+      default:
+        return true;
+    }
+  };
+
+  // Calculate filter counts
+  const filterCounts = {
+    'only-good': questionGroups.filter(q => questionMatchesFilter(q, 'only-good')).length,
+    'good-and-cfb': questionGroups.filter(q => questionMatchesFilter(q, 'good-and-cfb')).length,
+    'all': questionGroups.length,
+    'cfb-and-not-good': questionGroups.filter(q => questionMatchesFilter(q, 'cfb-and-not-good')).length,
+    'only-not-good': questionGroups.filter(q => questionMatchesFilter(q, 'only-not-good')).length,
+    'good-and-not-good': questionGroups.filter(q => questionMatchesFilter(q, 'good-and-not-good')).length,
+    'good-cfb-not-good': questionGroups.filter(q => questionMatchesFilter(q, 'good-cfb-not-good')).length,
+  };
+
   // Sort: first by reviewer count (3, 2, 1), then by qna_id
   const sortedQuestions = [...questionGroups].sort((a, b) => {
     // First sort by reviewer count (descending: 3, 2, 1)
@@ -820,6 +889,9 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
     // Then sort by qna_id (alphabetically/numerically)
     return a.qna_id.localeCompare(b.qna_id, undefined, { numeric: true, sensitivity: 'base' });
   });
+
+  // Apply quality filter
+  const filteredQuestions = sortedQuestions.filter(q => questionMatchesFilter(q, qualityFilter));
 
   const toggleExpanded = (qnaId: string) => {
     const newExpanded = new Set(expandedQuestions);
@@ -933,7 +1005,7 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
           <div>
             <h3 className="text-lg font-semibold text-gray-900">All Expert Responses</h3>
             <p className="text-sm text-gray-600">
-              Total questions: {sortedQuestions.length} | Total responses: {allResponses.total_responses}
+              Showing: {filteredQuestions.length} of {sortedQuestions.length} questions | Total responses: {allResponses.total_responses}
             </p>
           </div>
           <div className="flex space-x-3">
@@ -955,9 +1027,143 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
         </div>
       </div>
 
+      {/* Quality Filter Buttons */}
+      <div className="bg-white rounded-lg shadow p-4">
+        <div className="mb-3">
+          <h4 className="text-sm font-semibold text-gray-900 mb-2">Quality Filter:</h4>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setQualityFilter('all')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+              qualityFilter === 'all'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <span>All 3: Good, CFB, Not-Good</span>
+            <span className={`px-2 py-0.5 rounded-full text-xs ${
+              qualityFilter === 'all'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-200 text-gray-700'
+            }`}>
+              {filterCounts.all}
+            </span>
+          </button>
+          
+          <button
+            onClick={() => setQualityFilter('only-good')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+              qualityFilter === 'only-good'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <span>Only Good</span>
+            <span className={`px-2 py-0.5 rounded-full text-xs ${
+              qualityFilter === 'only-good'
+                ? 'bg-green-500 text-white'
+                : 'bg-gray-200 text-gray-700'
+            }`}>
+              {filterCounts['only-good']}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setQualityFilter('good-and-cfb')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+              qualityFilter === 'good-and-cfb'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <span>Only Good and CFB</span>
+            <span className={`px-2 py-0.5 rounded-full text-xs ${
+              qualityFilter === 'good-and-cfb'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-200 text-gray-700'
+            }`}>
+              {filterCounts['good-and-cfb']}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setQualityFilter('cfb-and-not-good')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+              qualityFilter === 'cfb-and-not-good'
+                ? 'bg-yellow-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <span>Only CFB and Not-Good</span>
+            <span className={`px-2 py-0.5 rounded-full text-xs ${
+              qualityFilter === 'cfb-and-not-good'
+                ? 'bg-yellow-500 text-white'
+                : 'bg-gray-200 text-gray-700'
+            }`}>
+              {filterCounts['cfb-and-not-good']}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setQualityFilter('only-not-good')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+              qualityFilter === 'only-not-good'
+                ? 'bg-red-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <span>Only Not-Good</span>
+            <span className={`px-2 py-0.5 rounded-full text-xs ${
+              qualityFilter === 'only-not-good'
+                ? 'bg-red-500 text-white'
+                : 'bg-gray-200 text-gray-700'
+            }`}>
+              {filterCounts['only-not-good']}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setQualityFilter('good-and-not-good')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+              qualityFilter === 'good-and-not-good'
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <span>Good and Not Good</span>
+            <span className={`px-2 py-0.5 rounded-full text-xs ${
+              qualityFilter === 'good-and-not-good'
+                ? 'bg-purple-500 text-white'
+                : 'bg-gray-200 text-gray-700'
+            }`}>
+              {filterCounts['good-and-not-good']}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setQualityFilter('good-cfb-not-good')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+              qualityFilter === 'good-cfb-not-good'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <span>Good, CFB and Not-Good</span>
+            <span className={`px-2 py-0.5 rounded-full text-xs ${
+              qualityFilter === 'good-cfb-not-good'
+                ? 'bg-indigo-500 text-white'
+                : 'bg-gray-200 text-gray-700'
+            }`}>
+              {filterCounts['good-cfb-not-good']}
+            </span>
+          </button>
+        </div>
+      </div>
+
       {/* Collapsible Questions List */}
       <div className="space-y-4">
-        {sortedQuestions.map((questionGroup) => {
+        {filteredQuestions.map((questionGroup) => {
           const isExpanded = expandedQuestions.has(questionGroup.qna_id);
           const reviewerCount = questionGroup.reviews.length;
           const reviewerCountColor = 
@@ -1074,18 +1280,16 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
                                 </div>
                               )}
 
-                              {review.answer_rating && (
-                                <div>
-                                  <span className="font-medium text-gray-700">Answer Rating: </span>
-                                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                                    review.answer_rating === 'GOOD' ? 'bg-green-100 text-green-800' :
-                                    review.answer_rating === 'CLOSE-BUT-FIXABLE' ? 'bg-yellow-100 text-yellow-800' :
-                                    'bg-red-100 text-red-800'
-                                  }`}>
-                                    {review.answer_rating}
-                                  </span>
-                                </div>
-                              )}
+                              <div>
+                                <span className="font-medium text-gray-700">Answer Rating: </span>
+                                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                  normalizeRating(review.answer_rating) === 'GOOD' ? 'bg-green-100 text-green-800' :
+                                  normalizeRating(review.answer_rating) === 'CLOSE-BUT-FIXABLE' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-red-100 text-red-800'
+                                }`}>
+                                  {normalizeRating(review.answer_rating)}
+                                </span>
+                              </div>
                             </div>
 
                             {review.answer_issues && review.answer_issues.length > 0 && (
