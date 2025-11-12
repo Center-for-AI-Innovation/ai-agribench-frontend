@@ -1171,20 +1171,20 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
           </button>
 
           <button
-            onClick={() => setQualityFilter('good-cfb-not-good')}
+            onClick={() => setQualityFilter('good-cbf-not-good')}
             className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
-              qualityFilter === 'good-cfb-not-good'
+              qualityFilter === 'good-cbf-not-good'
                 ? 'bg-indigo-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             <span>Good, CBF and Not-Good</span>
             <span className={`px-2 py-0.5 rounded-full text-xs ${
-              qualityFilter === 'good-cfb-not-good'
+              qualityFilter === 'good-cbf-not-good'
                 ? 'bg-indigo-500 text-white'
                 : 'bg-gray-200 text-gray-700'
             }`}>
-              {filterCounts['good-cfb-not-good']}
+              {filterCounts['good-cbf-not-good']}
             </span>
           </button>
         </div>
