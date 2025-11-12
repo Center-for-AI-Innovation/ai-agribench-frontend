@@ -827,7 +827,11 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
         // ALL reviews must be "GOOD"
         return ratings.length > 0 && ratings.every(r => r === 'GOOD');
       
-      case 'good-and-cfb':
+      case 'only-cbf':
+        // ALL reviews must be "CLOSE-BUT-FIXABLE"
+        return ratings.length > 0 && ratings.every(r => r === 'CLOSE-BUT-FIXABLE');
+      
+      case 'good-and-cbf':
         // ALL reviews must be either "GOOD" or "CLOSE-BUT-FIXABLE"
         // AND must have at least one of each
         return ratings.length > 0 &&
@@ -838,7 +842,7 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
       case 'all':
         return true;
       
-      case 'cfb-and-not-good':
+      case 'cbf-and-not-good':
         // ALL reviews must be either "CLOSE-BUT-FIXABLE" or "NOT GOOD"
         // AND must have at least one of each
         return ratings.length > 0 &&
@@ -858,7 +862,7 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
                ratings.includes('GOOD') &&
                ratings.includes('NOT GOOD');
       
-      case 'good-cfb-not-good':
+      case 'good-cbf-not-good':
         // Must have at least one of each rating type
         return ratings.includes('GOOD') &&
                ratings.includes('CLOSE-BUT-FIXABLE') &&
@@ -872,12 +876,13 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
   // Calculate filter counts
   const filterCounts = {
     'only-good': questionGroups.filter(q => questionMatchesFilter(q, 'only-good')).length,
-    'good-and-cfb': questionGroups.filter(q => questionMatchesFilter(q, 'good-and-cfb')).length,
+    'only-cbf': questionGroups.filter(q => questionMatchesFilter(q, 'only-cbf')).length,
+    'good-and-cbf': questionGroups.filter(q => questionMatchesFilter(q, 'good-and-cbf')).length,
     'all': questionGroups.length,
-    'cfb-and-not-good': questionGroups.filter(q => questionMatchesFilter(q, 'cfb-and-not-good')).length,
+    'cbf-and-not-good': questionGroups.filter(q => questionMatchesFilter(q, 'cbf-and-not-good')).length,
     'only-not-good': questionGroups.filter(q => questionMatchesFilter(q, 'only-not-good')).length,
     'good-and-not-good': questionGroups.filter(q => questionMatchesFilter(q, 'good-and-not-good')).length,
-    'good-cfb-not-good': questionGroups.filter(q => questionMatchesFilter(q, 'good-cfb-not-good')).length,
+    'good-cbf-not-good': questionGroups.filter(q => questionMatchesFilter(q, 'good-cbf-not-good')).length,
   };
 
   // Sort: first by reviewer count (3, 2, 1), then by qna_id
@@ -1041,7 +1046,7 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            <span>All 3: Good, CFB, Not-Good</span>
+            <span>All 3: Good, CBF, Not-Good</span>
             <span className={`px-2 py-0.5 rounded-full text-xs ${
               qualityFilter === 'all'
                 ? 'bg-blue-500 text-white'
@@ -1070,38 +1075,56 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
           </button>
 
           <button
-            onClick={() => setQualityFilter('good-and-cfb')}
+            onClick={() => setQualityFilter('only-cbf')}
             className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
-              qualityFilter === 'good-and-cfb'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <span>Only Good and CFB</span>
-            <span className={`px-2 py-0.5 rounded-full text-xs ${
-              qualityFilter === 'good-and-cfb'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 text-gray-700'
-            }`}>
-              {filterCounts['good-and-cfb']}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setQualityFilter('cfb-and-not-good')}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
-              qualityFilter === 'cfb-and-not-good'
+              qualityFilter === 'only-cbf'
                 ? 'bg-yellow-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            <span>Only CFB and Not-Good</span>
+            <span>Only CBF</span>
             <span className={`px-2 py-0.5 rounded-full text-xs ${
-              qualityFilter === 'cfb-and-not-good'
+              qualityFilter === 'only-cbf'
                 ? 'bg-yellow-500 text-white'
                 : 'bg-gray-200 text-gray-700'
             }`}>
-              {filterCounts['cfb-and-not-good']}
+              {filterCounts['only-cbf']}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setQualityFilter('good-and-cbf')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+              qualityFilter === 'good-and-cbf'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <span>Only Good and CBF</span>
+            <span className={`px-2 py-0.5 rounded-full text-xs ${
+              qualityFilter === 'good-and-cbf'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-200 text-gray-700'
+            }`}>
+              {filterCounts['good-and-cbf']}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setQualityFilter('cbf-and-not-good')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+              qualityFilter === 'cbf-and-not-good'
+                ? 'bg-yellow-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <span>Only CBF and Not-Good</span>
+            <span className={`px-2 py-0.5 rounded-full text-xs ${
+              qualityFilter === 'cbf-and-not-good'
+                ? 'bg-yellow-500 text-white'
+                : 'bg-gray-200 text-gray-700'
+            }`}>
+              {filterCounts['cbf-and-not-good']}
             </span>
           </button>
 
@@ -1149,7 +1172,7 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            <span>Good, CFB and Not-Good</span>
+            <span>Good, CBF and Not-Good</span>
             <span className={`px-2 py-0.5 rounded-full text-xs ${
               qualityFilter === 'good-cfb-not-good'
                 ? 'bg-indigo-500 text-white'
