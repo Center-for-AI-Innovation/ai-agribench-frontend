@@ -825,8 +825,16 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
 
   // Helper function to check if a question matches filter criteria
   const questionMatchesFilter = (questionGroup: typeof questionGroups[0], filter: string): boolean => {
-    // Get all normalized ratings for this question's reviews
-    const ratings = questionGroup.reviews.map(review => normalizeRating(review.answer_rating));
+    // Only consider reviews where has_expertise is true (exclude no-expertise reviews from quality filters)
+    const reviewsWithExpertise = questionGroup.reviews.filter(review => review.has_expertise === true);
+    
+    // If no reviews have expertise, don't match any quality filter (except 'all')
+    if (reviewsWithExpertise.length === 0) {
+      return filter === 'all';
+    }
+    
+    // Get all normalized ratings for reviews with expertise only
+    const ratings = reviewsWithExpertise.map(review => normalizeRating(review.answer_rating));
     
     switch (filter) {
       case 'only-good':
@@ -1311,13 +1319,19 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
 
                               <div>
                                 <span className="font-medium text-gray-700">Answer Rating: </span>
-                                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                                  normalizeRating(review.answer_rating) === 'GOOD' ? 'bg-green-100 text-green-800' :
-                                  normalizeRating(review.answer_rating) === 'CLOSE-BUT-FIXABLE' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-red-100 text-red-800'
-                                }`}>
-                                  {normalizeRating(review.answer_rating)}
-                                </span>
+                                {review.has_expertise ? (
+                                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                    normalizeRating(review.answer_rating) === 'GOOD' ? 'bg-green-100 text-green-800' :
+                                    normalizeRating(review.answer_rating) === 'CLOSE-BUT-FIXABLE' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-red-100 text-red-800'
+                                  }`}>
+                                    {normalizeRating(review.answer_rating)}
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">
+                                    N/A (No Expertise)
+                                  </span>
+                                )}
                               </div>
                             </div>
 
