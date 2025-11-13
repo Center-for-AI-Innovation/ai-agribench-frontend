@@ -826,13 +826,6 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
 
   // Convert to array and calculate statistics
   const questionGroups = Object.values(groupedByQna);
-  
-  // Calculate statistics
-  const stats = {
-    with3Reviewers: questionGroups.filter(q => q.reviews.length === 3).length,
-    with2Reviewers: questionGroups.filter(q => q.reviews.length === 2).length,
-    with1Reviewer: questionGroups.filter(q => q.reviews.length === 1).length
-  };
 
   // Helper function to check if a question matches filter criteria
   const questionMatchesFilter = (questionGroup: typeof questionGroups[0], filter: string): boolean => {
@@ -923,6 +916,39 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
   // Apply quality filter
   const filteredQuestions = sortedQuestions.filter(q => questionMatchesFilter(q, qualityFilter));
 
+  // Calculate category-wise statistics based on selected filter
+  const calculateCategoryStats = () => {
+    // Get questions matching the current filter
+    const filteredForStats = qualityFilter === 'all' 
+      ? questionGroups 
+      : questionGroups.filter(q => questionMatchesFilter(q, qualityFilter));
+
+    // Group by category and count reviewers
+    const categoryStats: Record<string, { with3: number; with2: number; with1: number; total: number }> = {};
+    
+    filteredForStats.forEach(question => {
+      const reviewerCount = question.reviews.length;
+      question.categories.forEach(category => {
+        if (!categoryStats[category]) {
+          categoryStats[category] = { with3: 0, with2: 0, with1: 0, total: 0 };
+        }
+        categoryStats[category].total++;
+        if (reviewerCount === 3) {
+          categoryStats[category].with3++;
+        } else if (reviewerCount === 2) {
+          categoryStats[category].with2++;
+        } else if (reviewerCount === 1) {
+          categoryStats[category].with1++;
+        }
+      });
+    });
+
+    return categoryStats;
+  };
+
+  const categoryStats = calculateCategoryStats();
+  const sortedCategories = Object.entries(categoryStats).sort((a, b) => b[1].total - a[1].total);
+
   const toggleExpanded = (qnaId: string) => {
     const newExpanded = new Set(expandedQuestions);
     if (newExpanded.has(qnaId)) {
@@ -996,36 +1022,71 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
 
   return (
     <div className="space-y-6">
-      {/* Statistics Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <Users className="h-8 w-8 text-blue-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Questions with 3 Reviewers</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.with3Reviewers}</p>
-            </div>
-          </div>
+      {/* Statistics Section - Category-wise breakdown */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Category-wise Breakdown
+            {qualityFilter !== 'all' && (
+              <span className="ml-2 text-sm font-normal text-gray-600">
+                (Filtered: {qualityFilter.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())})
+              </span>
+            )}
+          </h3>
         </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <Users className="h-8 w-8 text-green-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Questions with 2 Reviewers</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.with2Reviewers}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <Users className="h-8 w-8 text-orange-600" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Questions with 1 Reviewer</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.with1Reviewer}</p>
-            </div>
-          </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Category
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  With 3 Reviewers
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  With 2 Reviewers
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  With 1 Reviewer
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Total
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {sortedCategories.length > 0 ? (
+                sortedCategories.map(([category, stats]) => (
+                  <tr key={category} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm font-medium text-gray-900">
+                        {category.replace(/_/g, ' ')}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className="text-sm text-gray-900">{stats.with3}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className="text-sm text-gray-900">{stats.with2}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className="text-sm text-gray-900">{stats.with1}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className="text-sm font-semibold text-gray-900">{stats.total}</span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
+                    No questions found for the selected filter
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
