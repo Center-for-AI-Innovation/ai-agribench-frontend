@@ -383,38 +383,49 @@ const ReviewersTab: React.FC<{ reviewers: AdminReviewerStats[] }> = ({ reviewers
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {paginatedReviewers.map((reviewer) => (
-              <tr key={reviewer.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">{reviewer.name}</div>
-                    <div className="text-sm text-gray-500">{reviewer.email}</div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-900">{reviewer.id}</span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2 mr-3">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full"
-                        style={{ width: `${reviewer.completion_rate}%` }}
-                      ></div>
+            {paginatedReviewers.map((reviewer) => {
+              const hasPending = reviewer.remaining > 0;
+              return (
+                <tr 
+                  key={reviewer.id} 
+                  className={`hover:bg-gray-50 ${hasPending ? 'bg-red-50 border-l-4 border-red-500' : ''}`}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{reviewer.name}</div>
+                      <div className="text-sm text-gray-500">{reviewer.email}</div>
                     </div>
-                    <span className="text-sm text-gray-900">
-                      {reviewer.total_reviewed}/{reviewer.total_assigned} ({reviewer.completion_rate}%)
-                    </span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-900">{reviewer.expertise_rate}%</span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(reviewer.joined_at).toLocaleDateString()}
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="text-sm text-gray-900">{reviewer.id}</span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2 mr-3">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full"
+                          style={{ width: `${reviewer.completion_rate}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm text-gray-900">
+                        {reviewer.total_reviewed}/{reviewer.total_assigned} ({reviewer.completion_rate}%)
+                      </span>
+                      {hasPending && (
+                        <span className="ml-2 px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                          {reviewer.remaining} pending
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="text-sm text-gray-900">{reviewer.expertise_rate}%</span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(reviewer.joined_at).toLocaleDateString()}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
