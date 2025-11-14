@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Users, CheckCircle, AlertTriangle, TrendingUp, FileText, Download, Database, ChevronDown, ChevronRight } from 'lucide-react';
+import { BarChart3, Users, CheckCircle, AlertTriangle, TrendingUp, FileText, Download, Database, ChevronDown, ChevronRight, Search } from 'lucide-react';
 import { 
   getAdminOverview, 
   getAllReviewersStats, 
@@ -762,6 +762,7 @@ const QualityTab: React.FC<{ qualityInsights: QualityInsights | null }> = ({ qua
 const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResponses }) => {
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
   const [qualityFilter, setQualityFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Helper function to normalize ratings (undefined/null → "NOT GOOD")
   const normalizeRating = (rating: string | undefined | null): string => {
@@ -914,13 +915,28 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
   });
 
   // Apply quality filter
-  const filteredQuestions = sortedQuestions.filter(q => questionMatchesFilter(q, qualityFilter));
+  const qualityFilteredQuestions = sortedQuestions.filter(q => questionMatchesFilter(q, qualityFilter));
 
-  // Calculate statistics based on filtered questions
+  // Apply search filter
+  const filteredQuestions = qualityFilteredQuestions.filter(questionGroup => {
+    if (!searchQuery.trim()) return true;
+    
+    const query = searchQuery.toLowerCase().trim();
+    const searchableText = [
+      questionGroup.qna_id.toLowerCase(),
+      questionGroup.question.toLowerCase(),
+      questionGroup.answer.toLowerCase(),
+      ...questionGroup.categories.map(cat => cat.replace(/_/g, ' ').toLowerCase())
+    ].join(' ');
+    
+    return searchableText.includes(query);
+  });
+
+  // Calculate statistics based on filtered questions (after quality filter, before search)
   const stats = {
-    with3Reviewers: filteredQuestions.filter(q => q.reviews.length === 3).length,
-    with2Reviewers: filteredQuestions.filter(q => q.reviews.length === 2).length,
-    with1Reviewer: filteredQuestions.filter(q => q.reviews.length === 1).length
+    with3Reviewers: qualityFilteredQuestions.filter(q => q.reviews.length === 3).length,
+    with2Reviewers: qualityFilteredQuestions.filter(q => q.reviews.length === 2).length,
+    with1Reviewer: qualityFilteredQuestions.filter(q => q.reviews.length === 1).length
   };
 
   const toggleExpanded = (qnaId: string) => {
@@ -1029,13 +1045,14 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
         </div>
       </div>
 
-      {/* Header with download buttons */}
+      {/* Header with download buttons and search */}
       <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">All Expert Responses</h3>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">All Expert Responses</h3>
             <p className="text-sm text-gray-600">
-              Showing: {filteredQuestions.length} of {sortedQuestions.length} questions | Total responses: {allResponses.total_responses}
+              Showing: {filteredQuestions.length} of {qualityFilteredQuestions.length} questions
+              {searchQuery && ` (filtered by search)`} | Total responses: {allResponses.total_responses}
             </p>
           </div>
           <div className="flex space-x-3">
@@ -1054,6 +1071,28 @@ const ResponsesTab: React.FC<{ allResponses: AllResponses | null }> = ({ allResp
               <span>Download CSV</span>
             </button>
           </div>
+        </div>
+        
+        {/* Search Bar */}
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search by QA ID, question, answer, or category..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+            >
+              <span className="text-gray-400 hover:text-gray-600 text-sm">Clear</span>
+            </button>
+          )}
         </div>
       </div>
 
