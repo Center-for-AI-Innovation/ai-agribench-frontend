@@ -65,6 +65,10 @@ const QnAEditor: React.FC = () => {
     const ratings = reviewsWithExpertise.map(review => normalizeRating(review.answer_rating));
     const goodCount = ratings.filter(r => r === 'GOOD').length;
     const cbfCount = ratings.filter(r => r === 'CLOSE-BUT-FIXABLE').length;
+    const notGoodCount = ratings.filter(r => r === 'NOT GOOD').length;
+    
+    // Exclude if there's even 1 NOT GOOD rating
+    if (notGoodCount > 0) return false;
     
     return goodCount >= 1 && goodCount <= 3 && cbfCount === 1;
   };
@@ -472,17 +476,37 @@ const QnAEditor: React.FC = () => {
                                   </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                                  <div>
-                                    <span className="font-medium text-gray-700">Expertise: </span>
-                                    <span className={review.has_expertise ? 'text-green-600' : 'text-red-600'}>
-                                      {review.has_expertise ? 'Yes' : 'No'}
-                                    </span>
+                                <div className="space-y-3 text-sm">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                      <span className="font-medium text-gray-700">Expertise: </span>
+                                      <span className={review.has_expertise ? 'text-green-600' : 'text-red-600'}>
+                                        {review.has_expertise ? 'Yes' : 'No'}
+                                      </span>
+                                    </div>
+
+                                    {review.has_expertise && review.question_reasonable !== undefined && (
+                                      <div>
+                                        <span className="font-medium text-gray-700">Question Reasonable: </span>
+                                        <span className={review.question_reasonable ? 'text-green-600' : 'text-red-600'}>
+                                          {review.question_reasonable ? 'Yes' : 'No'}
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
 
-                                  <div>
-                                    <span className="font-medium text-gray-700">Answer Rating: </span>
-                                    {review.has_expertise ? (
+                                  {review.has_expertise && review.question_reasonable && review.question_properly_phrased !== undefined && (
+                                    <div>
+                                      <span className="font-medium text-gray-700">Question Properly Phrased: </span>
+                                      <span className={review.question_properly_phrased ? 'text-green-600' : 'text-red-600'}>
+                                        {review.question_properly_phrased ? 'Yes' : 'No'}
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  {review.has_expertise && (
+                                    <div>
+                                      <span className="font-medium text-gray-700">Answer Rating: </span>
                                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                                         normalizeRating(review.answer_rating) === 'GOOD' ? 'bg-green-100 text-green-800' :
                                         normalizeRating(review.answer_rating) === 'CLOSE-BUT-FIXABLE' ? 'bg-yellow-100 text-yellow-800' :
@@ -490,12 +514,33 @@ const QnAEditor: React.FC = () => {
                                       }`}>
                                         {normalizeRating(review.answer_rating)}
                                       </span>
-                                    ) : (
-                                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">
-                                        N/A (No Expertise)
-                                      </span>
-                                    )}
-                                  </div>
+                                    </div>
+                                  )}
+
+                                  {review.has_expertise && review.answer_issues && review.answer_issues.length > 0 && (
+                                    <div>
+                                      <span className="font-medium text-gray-700">Answer Issues: </span>
+                                      <div className="mt-1 flex flex-wrap gap-2">
+                                        {review.answer_issues.map((issue, issueIndex) => (
+                                          <span
+                                            key={issueIndex}
+                                            className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full"
+                                          >
+                                            {issue.replace(/_/g, ' ')}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {review.has_expertise && review.other_weakness_explanation && (
+                                    <div>
+                                      <span className="font-medium text-gray-700">Other Weakness Explanation: </span>
+                                      <p className="mt-1 text-gray-700 bg-gray-50 p-2 rounded border text-sm">
+                                        {review.other_weakness_explanation}
+                                      </p>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             ))}
