@@ -11,6 +11,7 @@ import ReviewForm from '@/components/ReviewForm';
 import QuestionList from '@/components/QuestionList';
 import StatsDisplay from '@/components/StatsDisplay';
 import AdminDashboard from '@/components/AdminDashboard';
+import QnAEditor from '@/components/QnAEditor';
 import Instructions from '@/components/Instructions';
 import { 
   getPendingQuestions, 
@@ -209,6 +210,16 @@ function ReviewPageContent() {
       <div className="min-h-screen bg-gray-50">
         <Header />
         <AdminDashboard />
+      </div>
+    );
+  }
+
+  // If qna_editor user, show editor dashboard
+  if (userType === 'qna_editor') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <QnAEditor />
       </div>
     );
   }

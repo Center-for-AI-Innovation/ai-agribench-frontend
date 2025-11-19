@@ -5,14 +5,14 @@ import { User, Assignment, ReviewerStats } from '@/lib/api';
 
 interface AuthContextType {
   user: User | null;
-  userType: 'reviewer' | 'admin' | null;
+  userType: 'reviewer' | 'admin' | 'qna_editor' | null;
   pendingQuestions: Assignment[];
   reviewedQuestions: Assignment[];
   stats: ReviewerStats | null;
   isLoading: boolean;
   isInitializing: boolean;
   error: string | null;
-  login: (user: User, userType: 'reviewer' | 'admin') => void;
+  login: (user: User, userType: 'reviewer' | 'admin' | 'qna_editor') => void;
   logout: () => void;
   setPendingQuestions: (questions: Assignment[]) => void;
   setReviewedQuestions: (questions: Assignment[]) => void;
@@ -39,7 +39,7 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [userType, setUserType] = useState<'reviewer' | 'admin' | null>(null);
+  const [userType, setUserType] = useState<'reviewer' | 'admin' | 'qna_editor' | null>(null);
   const [pendingQuestions, setPendingQuestionsState] = useState<Assignment[]>([]);
   const [reviewedQuestions, setReviewedQuestionsState] = useState<Assignment[]>([]);
   const [stats, setStatsState] = useState<ReviewerStats | null>(null);
@@ -56,7 +56,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
-        setUserType(storedUserType as 'reviewer' | 'admin');
+        setUserType(storedUserType as 'reviewer' | 'admin' | 'qna_editor');
       } catch (error) {
         console.error('Failed to restore session:', error);
         // Clear invalid data
@@ -69,7 +69,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsInitializing(false);
   }, []);
 
-  const login = (userData: User, userTypeData: 'reviewer' | 'admin') => {
+  const login = (userData: User, userTypeData: 'reviewer' | 'admin' | 'qna_editor') => {
     setUser(userData);
     setUserType(userTypeData);
     setError(null);

@@ -26,7 +26,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
-  type: 'reviewer' | 'admin';
+  type: 'reviewer' | 'admin' | 'qna_editor';
 }
 
 export interface QNA {
@@ -63,7 +63,7 @@ export interface ReviewerStats {
 
 export interface LoginResponse {
   success: boolean;
-  user_type?: 'reviewer' | 'admin';
+  user_type?: 'reviewer' | 'admin' | 'qna_editor';
   user?: User;
   message?: string;
 }
@@ -217,6 +217,28 @@ export interface AllResponses {
 
 export const getAllResponses = async (): Promise<AllResponses> => {
   const response = await api.get('/api/admin/all-responses');
+  return response.data;
+};
+
+// Editor API functions
+export interface QnAUpdateRequest {
+  question: string;
+  answer: string;
+}
+
+export interface QnAUpdateResponse {
+  success: boolean;
+  message?: string;
+  qna?: {
+    qna_id: string;
+    question: string;
+    answer: string;
+    updated_at: string;
+  };
+}
+
+export const updateQnA = async (qnaId: string, question: string, answer: string): Promise<QnAUpdateResponse> => {
+  const response = await api.put(`/api/admin/qnas/${qnaId}`, { question, answer });
   return response.data;
 };
 

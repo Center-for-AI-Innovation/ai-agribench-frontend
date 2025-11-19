@@ -23,7 +23,25 @@ const LoginForm: React.FC = () => {
     setError(null);
 
     try {
-      const response = await apiLogin(email.trim().toLowerCase());
+      const emailLower = email.trim().toLowerCase();
+      
+      // Handle editor email specially - create user object without backend call
+      if (emailLower === 'editor@qnareview.com') {
+        const editorUser = {
+          id: 0,
+          name: 'QnA Editor',
+          email: 'editor@qnareview.com',
+          type: 'qna_editor' as const
+        };
+        
+        login(editorUser, 'qna_editor');
+        toast.success('Welcome, Editor!');
+        window.location.href = '/review';
+        return;
+      }
+      
+      // For other emails, call the API
+      const response = await apiLogin(emailLower);
       if (response.success && response.user && response.user_type) {
         login(response.user, response.user_type);
         
@@ -36,8 +54,24 @@ const LoginForm: React.FC = () => {
         toast.error(response.message || 'Login failed');
         setError(response.message || 'Login failed');
       }
-    } catch (error) {
-      const errorMessage = 'Login failed. Please try again.';
+    } catch (error: any) {
+      // If API call fails, check if it's the editor email (shouldn't happen, but just in case)
+      const emailLower = email.trim().toLowerCase();
+      if (emailLower === 'editor@qnareview.com') {
+        const editorUser = {
+          id: 0,
+          name: 'QnA Editor',
+          email: 'editor@qnareview.com',
+          type: 'qna_editor' as const
+        };
+        
+        login(editorUser, 'qna_editor');
+        toast.success('Welcome, Editor!');
+        window.location.href = '/review';
+        return;
+      }
+      
+      const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
       toast.error(errorMessage);
       setError(errorMessage);
     } finally {

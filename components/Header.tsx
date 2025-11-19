@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { LogOut, Shield, User } from 'lucide-react';
+import { LogOut, Shield, User, Edit2 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
@@ -38,6 +38,8 @@ const Header: React.FC = () => {
             <div className="flex items-center space-x-2 min-w-0">
               {userType === 'admin' ? (
                 <Shield className="h-4 w-4 text-purple-600 flex-shrink-0" />
+              ) : userType === 'qna_editor' ? (
+                <Edit2 className="h-4 w-4 text-green-600 flex-shrink-0" />
               ) : (
                 <User className="h-4 w-4 text-blue-600 flex-shrink-0" />
               )}
@@ -46,7 +48,7 @@ const Header: React.FC = () => {
                   {user?.name}
                 </div>
                 <div className="text-xs text-gray-500 capitalize hidden sm:block">
-                  {userType === 'admin' ? 'Administrator' : 'Reviewer'}
+                  {userType === 'admin' ? 'Administrator' : userType === 'qna_editor' ? 'QnA Editor' : 'Reviewer'}
                 </div>
               </div>
             </div>
