@@ -130,6 +130,27 @@ const QnAEditor: React.FC = () => {
   const [editValues, setEditValues] = useState<{ question: string; answer: string } | null>(null);
   const [savingQnaId, setSavingQnaId] = useState<string | null>(null);
   const [selectedReviewer, setSelectedReviewer] = useState<string | null>(null);
+  const [editedQnaIds, setEditedQnaIds] = useState<Set<string>>(new Set());
+
+  // Load edited QNAs from localStorage on mount
+  useEffect(() => {
+    const storedEditedIds = localStorage.getItem('editedQnaIds');
+    if (storedEditedIds) {
+      try {
+        const parsedIds = JSON.parse(storedEditedIds);
+        setEditedQnaIds(new Set(parsedIds));
+      } catch (e) {
+        console.error('Failed to parse edited QNA IDs from localStorage:', e);
+      }
+    }
+  }, []);
+
+  // Save edited QNAs to localStorage whenever they change
+  useEffect(() => {
+    if (editedQnaIds.size > 0) {
+      localStorage.setItem('editedQnaIds', JSON.stringify(Array.from(editedQnaIds)));
+    }
+  }, [editedQnaIds]);
 
   useEffect(() => {
     loadQnAs();
@@ -366,6 +387,14 @@ const QnAEditor: React.FC = () => {
     });
   };
 
+  // Check if reviewer is finished (all their CLOSE-BUT-FIXABLE questions have been edited)
+  const isReviewerFinished = (reviewerEmail: string) => {
+    const reviewerQAs = getQAsForReviewer(reviewerEmail);
+    if (reviewerQAs.length === 0) return false;
+    // Reviewer is finished if all their questions have been edited at least once
+    return reviewerQAs.every(qa => editedQnaIds.has(qa.qna_id));
+  };
+
   // Calculate statistics (based on search-filtered questions)
   const stats = {
     with3Reviewers: searchFilteredQuestions.filter(q => q.reviews.length === 3).length,
@@ -406,6 +435,8 @@ const QnAEditor: React.FC = () => {
       const response = await updateQnA(qnaId, editValues.question, editValues.answer);
       if (response.success) {
         toast.success('QnA updated successfully');
+        // Mark QNA as edited
+        setEditedQnaIds(prev => new Set(prev).add(qnaId));
         // Update allResponses state
         setAllResponses(prev => {
           if (!prev) return prev;
@@ -549,7 +580,9 @@ const QnAEditor: React.FC = () => {
                     >
                       <div className="flex justify-between items-center">
                         <div>
-                          <div className="font-medium text-gray-900">{reviewer.name}</div>
+                          <div className={`font-medium ${isReviewerFinished(reviewer.email) ? 'text-green-600' : 'text-gray-900'}`}>
+                            {reviewer.name}
+                          </div>
                           <div className="text-sm text-gray-500">{reviewer.email}</div>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -586,7 +619,11 @@ const QnAEditor: React.FC = () => {
                             return (
                               <div
                                 key={questionGroup.qna_id}
-                                className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                                className={`bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow ${
+                                  editedQnaIds.has(questionGroup.qna_id)
+                                    ? 'border-green-500 border-2 bg-green-50'
+                                    : 'border-gray-200'
+                                }`}
                               >
                   {/* Question Header */}
                   <div className="p-4">
@@ -598,8 +635,15 @@ const QnAEditor: React.FC = () => {
                         >
                           {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
                         </button>
-                        <h3 className="font-medium text-gray-900 text-base">
+                        <h3 className={`font-medium text-base ${
+                          editedQnaIds.has(questionGroup.qna_id)
+                            ? 'text-green-600'
+                            : 'text-gray-900'
+                        }`}>
                           QA ID: {questionGroup.qna_id}
+                          {editedQnaIds.has(questionGroup.qna_id) && (
+                            <span className="ml-2 text-xs text-green-600">✓ Edited</span>
+                          )}
                         </h3>
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${reviewerCountColor}`}>
                           {reviewerCount} {reviewerCount === 1 ? 'Reviewer' : 'Reviewers'}
