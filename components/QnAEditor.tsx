@@ -425,7 +425,10 @@ const QnAEditor: React.FC = () => {
 
     setSavingQnaId(qnaId);
     try {
+      console.log('Attempting to save QnA:', { qnaId, question: editValues.question.substring(0, 50) + '...', answer: editValues.answer.substring(0, 50) + '...' });
       const response = await updateQnA(qnaId, editValues.question, editValues.answer);
+      console.log('Save response received:', response);
+      
       if (response.success) {
         toast.success('QnA updated successfully');
         // Refresh edit history from backend
@@ -450,11 +453,36 @@ const QnAEditor: React.FC = () => {
         setEditingQnaId(null);
         setEditValues(null);
       } else {
-        toast.error(response.message || 'Failed to update QnA');
+        const errorMsg = response.message || 'Failed to update QnA';
+        console.error('Save failed - response indicates failure:', { response, errorMsg });
+        toast.error(errorMsg);
       }
     } catch (error: any) {
-      console.error('Failed to update QnA:', error);
-      toast.error('Failed to update QnA. Please try again.');
+      // Detailed error logging
+      console.error('Failed to update QnA - Full error details:', {
+        error,
+        message: error?.message,
+        response: error?.response,
+        status: error?.response?.status,
+        statusText: error?.response?.statusText,
+        data: error?.response?.data,
+        request: error?.request,
+        config: error?.config
+      });
+      
+      // Extract more specific error message
+      let errorMessage = 'Failed to update QnA. Please try again.';
+      if (error?.response?.data?.error) {
+        errorMessage = `Error: ${error.response.data.error}`;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = `Error: ${error.message}`;
+      } else if (error?.response?.status) {
+        errorMessage = `Server error (${error.response.status}). Please try again.`;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setSavingQnaId(null);
     }

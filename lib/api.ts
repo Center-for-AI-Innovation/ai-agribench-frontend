@@ -9,6 +9,49 @@ const api = axios.create({
   },
 });
 
+// Add request interceptor for logging
+api.interceptors.request.use(
+  (config) => {
+    console.log('API Request:', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      baseURL: config.baseURL,
+      fullURL: `${config.baseURL}${config.url}`,
+      data: config.data,
+      headers: config.headers
+    });
+    return config;
+  },
+  (error) => {
+    console.error('API Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for logging
+api.interceptors.response.use(
+  (response) => {
+    console.log('API Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      url: response.config.url,
+      data: response.data
+    });
+    return response;
+  },
+  (error) => {
+    console.error('API Response Error:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      url: error.config?.url,
+      data: error.response?.data,
+      headers: error.response?.headers
+    });
+    return Promise.reject(error);
+  }
+);
+
 export interface Reviewer {
   id: number;
   name: string;
@@ -247,9 +290,24 @@ export const getEditedQnaIds = async (): Promise<EditedQnaIdsResponse> => {
 };
 
 export const updateQnA = async (qnaId: string, question: string, answer: string): Promise<QnAUpdateResponse> => {
-  // Use the endpoint that accepts string qna_id
-  const response = await api.put(`/api/admin/qnas/by-qna-id/${qnaId}`, { question, answer });
-  return response.data;
+  try {
+    console.log('updateQnA called with:', { qnaId, questionLength: question.length, answerLength: answer.length });
+    // Use the endpoint that accepts string qna_id
+    const response = await api.put(`/api/admin/qnas/by-qna-id/${qnaId}`, { question, answer });
+    console.log('updateQnA response:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('updateQnA error details:', {
+      qnaId,
+      error,
+      message: error?.message,
+      response: error?.response,
+      status: error?.response?.status,
+      data: error?.response?.data,
+      request: error?.request
+    });
+    throw error; // Re-throw to let the caller handle it
+  }
 };
 
 export default api; 

@@ -27,36 +27,20 @@ const LoginForm: React.FC = () => {
     try {
       const emailLower = email.trim().toLowerCase();
       
-      // ============================================================
-      // TEMPORARY: Site down message for editor@qnareview.com
-      // TO REMOVE: Delete this block and uncomment the original logic below
-      // ============================================================
+      // Handle editor email specially - create user object without backend call
       if (emailLower === 'editor@qnareview.com') {
-        const errorMsg = 'Site is currently down for maintenance. Please check back later.';
-        toast.error(errorMsg);
-        setError(errorMsg);
-        setErrorMessage(errorMsg);
-        setIsSubmitting(false);
+        const editorUser = {
+          id: 0,
+          name: 'QnA Editor',
+          email: 'editor@qnareview.com',
+          type: 'qna_editor' as const
+        };
+        
+        login(editorUser, 'qna_editor');
+        toast.success('Welcome, Editor!');
+        window.location.href = '/review';
         return;
       }
-      
-      // ============================================================
-      // ORIGINAL LOGIC (currently disabled - uncomment to restore):
-      // ============================================================
-      // Handle editor email specially - create user object without backend call
-      // if (emailLower === 'editor@qnareview.com') {
-      //   const editorUser = {
-      //     id: 0,
-      //     name: 'QnA Editor',
-      //     email: 'editor@qnareview.com',
-      //     type: 'qna_editor' as const
-      //   };
-      //   
-      //   login(editorUser, 'qna_editor');
-      //   toast.success('Welcome, Editor!');
-      //   window.location.href = '/review';
-      //   return;
-      // }
       
       // For other emails, call the API
       const response = await apiLogin(emailLower);
@@ -75,37 +59,21 @@ const LoginForm: React.FC = () => {
         setErrorMessage(errorMsg);
       }
     } catch (error: any) {
-      // ============================================================
-      // TEMPORARY: Site down message for editor@qnareview.com
-      // TO REMOVE: Delete this block and uncomment the original logic below
-      // ============================================================
+      // If API call fails, check if it's the editor email (shouldn't happen, but just in case)
       const emailLower = email.trim().toLowerCase();
       if (emailLower === 'editor@qnareview.com') {
-        const errorMsg = 'Site is currently down for maintenance. Please check back later.';
-        toast.error(errorMsg);
-        setError(errorMsg);
-        setErrorMessage(errorMsg);
-        setIsSubmitting(false);
+        const editorUser = {
+          id: 0,
+          name: 'QnA Editor',
+          email: 'editor@qnareview.com',
+          type: 'qna_editor' as const
+        };
+        
+        login(editorUser, 'qna_editor');
+        toast.success('Welcome, Editor!');
+        window.location.href = '/review';
         return;
       }
-      
-      // ============================================================
-      // ORIGINAL LOGIC (currently disabled - uncomment to restore):
-      // ============================================================
-      // If API call fails, check if it's the editor email (shouldn't happen, but just in case)
-      // if (emailLower === 'editor@qnareview.com') {
-      //   const editorUser = {
-      //     id: 0,
-      //     name: 'QnA Editor',
-      //     email: 'editor@qnareview.com',
-      //     type: 'qna_editor' as const
-      //   };
-      //   
-      //   login(editorUser, 'qna_editor');
-      //   toast.success('Welcome, Editor!');
-      //   window.location.href = '/review';
-      //   return;
-      // }
       
       const errorMsg = error.response?.data?.message || 'Login failed. Please try again.';
       toast.error(errorMsg);
