@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getAllResponses, updateQnA, AllResponses } from '@/lib/api';
+import { getAllResponses, updateQnA, getEditedQnaIds, AllResponses } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 import { ChevronDown, ChevronRight, Search, Users, Save, X, Edit2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -132,28 +132,21 @@ const QnAEditor: React.FC = () => {
   const [selectedReviewer, setSelectedReviewer] = useState<string | null>(null);
   const [editedQnaIds, setEditedQnaIds] = useState<Set<string>>(new Set());
 
-  // Load edited QNAs from localStorage on mount
-  useEffect(() => {
-    const storedEditedIds = localStorage.getItem('editedQnaIds');
-    if (storedEditedIds) {
-      try {
-        const parsedIds = JSON.parse(storedEditedIds);
-        setEditedQnaIds(new Set(parsedIds));
-      } catch (e) {
-        console.error('Failed to parse edited QNA IDs from localStorage:', e);
-      }
+  const loadEditedQnaIds = async () => {
+    try {
+      const response = await getEditedQnaIds();
+      setEditedQnaIds(new Set(response.edited_qna_ids || []));
+    } catch (error: any) {
+      console.error('Failed to load edited QNA IDs:', error);
+      // Don't show error toast - just log it and continue with empty set
+      // This allows the editor to work even if edit history isn't available
+      setEditedQnaIds(new Set());
     }
-  }, []);
-
-  // Save edited QNAs to localStorage whenever they change
-  useEffect(() => {
-    if (editedQnaIds.size > 0) {
-      localStorage.setItem('editedQnaIds', JSON.stringify(Array.from(editedQnaIds)));
-    }
-  }, [editedQnaIds]);
+  };
 
   useEffect(() => {
     loadQnAs();
+    loadEditedQnaIds();
   }, []);
 
   // Calculate stats for displayed QA pairs whenever data, search query, or selected reviewer changes
@@ -435,8 +428,8 @@ const QnAEditor: React.FC = () => {
       const response = await updateQnA(qnaId, editValues.question, editValues.answer);
       if (response.success) {
         toast.success('QnA updated successfully');
-        // Mark QNA as edited
-        setEditedQnaIds(prev => new Set(prev).add(qnaId));
+        // Refresh edit history from backend
+        await loadEditedQnaIds();
         // Update allResponses state
         setAllResponses(prev => {
           if (!prev) return prev;
