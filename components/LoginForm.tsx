@@ -10,6 +10,7 @@ import Image from 'next/image';
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { login, setError } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,6 +22,7 @@ const LoginForm: React.FC = () => {
 
     setIsSubmitting(true);
     setError(null);
+    setErrorMessage(null);
 
     try {
       const emailLower = email.trim().toLowerCase();
@@ -30,8 +32,10 @@ const LoginForm: React.FC = () => {
       // TO REMOVE: Delete this block and uncomment the original logic below
       // ============================================================
       if (emailLower === 'editor@qnareview.com') {
-        toast.error('Site is currently down for maintenance. Please check back later.');
-        setError('Site is currently down for maintenance. Please check back later.');
+        const errorMsg = 'Site is currently down for maintenance. Please check back later.';
+        toast.error(errorMsg);
+        setError(errorMsg);
+        setErrorMessage(errorMsg);
         setIsSubmitting(false);
         return;
       }
@@ -65,8 +69,10 @@ const LoginForm: React.FC = () => {
           toast.success(`Welcome, ${response.user.name}!`);
         }
       } else {
-        toast.error(response.message || 'Login failed');
-        setError(response.message || 'Login failed');
+        const errorMsg = response.message || 'Login failed';
+        toast.error(errorMsg);
+        setError(errorMsg);
+        setErrorMessage(errorMsg);
       }
     } catch (error: any) {
       // ============================================================
@@ -75,8 +81,10 @@ const LoginForm: React.FC = () => {
       // ============================================================
       const emailLower = email.trim().toLowerCase();
       if (emailLower === 'editor@qnareview.com') {
-        toast.error('Site is currently down for maintenance. Please check back later.');
-        setError('Site is currently down for maintenance. Please check back later.');
+        const errorMsg = 'Site is currently down for maintenance. Please check back later.';
+        toast.error(errorMsg);
+        setError(errorMsg);
+        setErrorMessage(errorMsg);
         setIsSubmitting(false);
         return;
       }
@@ -99,9 +107,10 @@ const LoginForm: React.FC = () => {
       //   return;
       // }
       
-      const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
-      toast.error(errorMessage);
-      setError(errorMessage);
+      const errorMsg = error.response?.data?.message || 'Login failed. Please try again.';
+      toast.error(errorMsg);
+      setError(errorMsg);
+      setErrorMessage(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -142,7 +151,10 @@ const LoginForm: React.FC = () => {
                 type="email"
                 id="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errorMessage) setErrorMessage(null);
+                }}
                 required
                 placeholder="your.email@example.com"
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900"
@@ -150,6 +162,12 @@ const LoginForm: React.FC = () => {
               />
             </div>
           </div>
+
+          {errorMessage && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              <p className="text-sm font-medium">{errorMessage}</p>
+            </div>
+          )}
 
           <button
             type="submit"
