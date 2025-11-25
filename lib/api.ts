@@ -237,8 +237,18 @@ export interface QnAUpdateResponse {
   };
 }
 
+export interface EditedQnaIdsResponse {
+  edited_qna_ids: string[];
+}
+
+export const getEditedQnaIds = async (): Promise<EditedQnaIdsResponse> => {
+  const response = await api.get('/api/admin/qnas/edit-history');
+  return response.data;
+};
+
 export const updateQnA = async (qnaId: string, question: string, answer: string): Promise<QnAUpdateResponse> => {
-  const response = await api.put(`/api/admin/qnas/${qnaId}`, { question, answer });
+  // Use the endpoint that accepts string qna_id
+  const response = await api.put(`/api/admin/qnas/by-qna-id/${qnaId}`, { question, answer });
   return response.data;
 };
 
